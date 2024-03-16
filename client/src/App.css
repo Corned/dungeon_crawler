@@ -1,0 +1,42 @@
+.App {
+  height: 100%;
+  gap: 10px;
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.App > * {
+  display: flex;
+  flex-direction: row;
+}
+
+canvas {
+  border: 2px solid white;
+}
+
+.flex--column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: left;
+  border: 1px solid red;
+}
+
+.game-view {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.instructions {
+  display: flex;
+  flex-direction: column;
+}
+
+footer {
+  position: absolute;
+  bottom: 2%;
+}
