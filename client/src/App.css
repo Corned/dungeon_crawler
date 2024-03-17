@@ -17,14 +17,6 @@ canvas {
   border: 2px solid white;
 }
 
-.flex--column {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: left;
-  border: 1px solid red;
-}
-
 .game-view {
   display: flex;
   flex-direction: row;

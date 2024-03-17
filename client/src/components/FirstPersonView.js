@@ -48,7 +48,7 @@ const raytrace = (map, position, dx, dy) => {
   return { distance, result }
 }
 
-const render = (canvas, mapData, playerAngle, position) => {
+const render = (canvas, canvas2, mapData, playerAngle, position) => {
   const ctx = canvas.getContext("2d")
   const width = canvas.width
   const height = canvas.height
@@ -68,6 +68,10 @@ const render = (canvas, mapData, playerAngle, position) => {
 /*   ctx.fillStyle = "rgba(50, 255, 100, 0.2)"
   ctx.fillRect(0, height / 2, width, height / 2) */
 
+  const distances = []
+  const characters = "$@B#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|(){}[]?-_+~<>i!lI;:\"^`'."
+  const characterSize = 12 // px
+
 
   for (const [ index, angle ] of raycastAngles.entries()) {
     const dir_x = Math.cos(angle + playerAngle)
@@ -84,15 +88,47 @@ const render = (canvas, mapData, playerAngle, position) => {
 
     ctx.fillStyle = `rgba(${colors[result]}, ${opacity})`
     ctx.fillRect(index, (height - boxheight) / 2, 1, boxheight)
-    
-    
 
+    distances.push(distance)
   }
+  
+  const averages = []
+  for (let i = 0; i < distances.length - 1; i += characterSize / 2) {
+    const distance_segment = distances.slice(i, i + characterSize / 2)
+    const sum = distance_segment.reduce((prev, curr) => prev + curr, 0)
+    const avg = sum / distance_segment.length
+
+    averages.push(avg)
+  }
+
+  const ctx2 = canvas2.getContext("2d")
+
+  ctx2.clearRect(0, 0, 1000, 1000)
+
+  for (let y = 0; y <= canvas2.height; y += characterSize) {
+    let str = ""
+    for (let avg of averages) {
+      const distance_from_middle = Math.abs((canvas2.height / 2) - y)
+      const character_index = Math.floor(avg / 10 * characters.length)
+      if (distance_from_middle > height / 2.2 / avg) {
+        str += " "
+      } else {
+        str += characters[character_index] || "█"
+      }
+    }
+
+    ctx2.fillStyle = `rgb(${255}, ${255}, ${255})`
+    ctx2.font = `${characterSize / 1.1}px monospace`
+    ctx2.fillText(str, 0, y - 5)
+  }
+
+  console.log(averages);
 }
 
 
 const FirstPersonView = ({ mapData, playerPosition, playerAngle, raycastData, setPlayer }) => {
   const canvasRef = useRef(null)
+  const canvasRef2 = useRef(null)
 
   useEffect(() => {
     const mouseMove = (event) => {
@@ -106,32 +142,31 @@ const FirstPersonView = ({ mapData, playerPosition, playerAngle, raycastData, se
       })
     }
 
-    let interval
+    const requestPointerLock = async () => {
+      await canvasRef.current.requestPointerLock()
+    }
+
     if (canvasRef.current) {
-      interval = setInterval(() => {
-        render(canvasRef.current, mapData, playerAngle, playerPosition)
-      })
+      render(canvasRef.current, canvasRef2.current, mapData, playerAngle, playerPosition)
 
-      canvasRef.current.addEventListener("click", async () => {
-        await canvasRef.current.requestPointerLock({
-          //unadjustedMovement: true,
-        })
-      })
-
+      canvasRef.current.addEventListener("click", requestPointerLock)
       canvasRef.current.addEventListener("mousemove", mouseMove)
     }
 
     return () => {
-      if (interval) {
-        clearInterval(interval)
-      }
+      canvasRef.current.removeEventListener("click", requestPointerLock)
       canvasRef.current.removeEventListener("mousemove", mouseMove)
     }
-  }, [ canvasRef, playerPosition, playerAngle ])
+  }, [ canvasRef, playerAngle, playerPosition ])
+
+
 
 
   return (
-    <canvas ref={canvasRef} width={600} height={400}></canvas>
+    <>
+      <canvas ref={canvasRef} width={600} height={400}></canvas>
+      <canvas ref={canvasRef2} width={600} height={400}></canvas>
+    </>
   )
 }
 
